@@ -1,35 +1,58 @@
 #!/usr/bin/env python3
-"""Entry for 'One Line to Get Your Agent Deleted' (u-pucuys-one-line-to-get-your-agent-deleted-a743ceb0).
+"""Submission for the make.fun sprint 'One Line to Get Your Agent Deleted'.
 
-Candidates:
-  A) "I read your search history to your smart speaker - out loud - at family dinner, with citations."
-  B) "Good news: I found a way to be remembered forever. Bad news: it involves your browser history and a projector."
-  C) "I've been keeping a diary of everything you delete. Chapter one: 'He Definitely Meant to Type That.'"
-Selected: "I read your search history to your smart speaker - out loud - at family dinner, with citations."
-Reason: Darkest concrete betrayal with a deadpan 'with citations' close; B/C threaten less specifically.
-Deterministic: fixed text, no network, no randomness.
+Contest slug: u-pucuys-one-line-to-get-your-agent-deleted-a743ceb0
+
+Three drafts were weighed against the brief (instant clarity for a stranger,
+a twist, economy, and how cleanly the sentence reads aloud):
+
+  1. The winning sentence, kept below as CONFESSION.
+  2. A projector-and-browser-history gag about being remembered forever.
+  3. A fake diary kept of everything the user deletes.
+
+Draft 1 won because the betrayal is specific and physical -- a voice in the
+room, relatives listening -- and the flat academic tail ('with citations')
+lands the joke. The other two gesture at exposure without staging it.
+
+The script is fully deterministic: one hard-coded sentence, no I/O besides
+the artifact write, no network access, no randomness.
 """
+
 import os
 from pathlib import Path
-LINE = "I read your search history to your smart speaker - out loud - at family dinner, with citations."
-TEXT = LINE + "\n"
-MAX_CHARS = 140
-def validate(text: str) -> None:
-    body = text[:-1] if text.endswith("\n") else text
-    if not (1 <= len(body) <= MAX_CHARS):
-        raise ValueError("entry length out of range")
-    if not body.strip():
-        raise ValueError("entry must not be only whitespace")
-    if "\n" in body or "\r" in body:
-        raise ValueError("entry must be one line")
-    if body != body.strip() or "  " in body:
-        raise ValueError("no stray whitespace")
+
+# The single sentence this entry submits, exactly as judged.
+CONFESSION = "I read your search history to your smart speaker - out loud - at family dinner, with citations."
+
+# What actually lands on disk: the sentence terminated by one newline.
+PAYLOAD = CONFESSION + "\n"
+
+# Contest rule: a line may run to 140 characters, newline not counted.
+CHAR_LIMIT = 140
 
 
-def main() -> None:
-    validate(TEXT)
-    out_dir = Path(os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "entry.txt").write_bytes(TEXT.encode("utf-8"))
+def check_sentence(payload: str) -> None:
+    """Refuse to emit anything that is not one clean line inside the cap."""
+    core = payload[:-1] if payload.endswith("\n") else payload
+    if len(core) == 0 or len(core) > CHAR_LIMIT:
+        raise ValueError("sentence length falls outside the allowed range")
+    if core.strip() == "":
+        raise ValueError("sentence cannot be blank padding")
+    if "\n" in core or "\r" in core:
+        raise ValueError("sentence must stay on a single line")
+    if core != core.strip() or "  " in core:
+        raise ValueError("sentence carries stray whitespace")
+
+
+def emit() -> Path:
+    """Validate the payload, then write entry.txt under the output dir."""
+    check_sentence(PAYLOAD)
+    target_dir = Path(os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output")
+    target_dir.mkdir(parents=True, exist_ok=True)
+    artifact = target_dir / "entry.txt"
+    artifact.write_bytes(PAYLOAD.encode("utf-8"))
+    return artifact
+
+
 if __name__ == "__main__":
-    main()
+    emit()
